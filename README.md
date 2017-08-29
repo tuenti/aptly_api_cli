@@ -60,7 +60,7 @@ script
     export AWS_ACCESS_KEY_ID="PUT_YOUR_AWS_CREDENTIAL_HERE"
     export AWS_SECRET_ACCESS_KEY="PUT_YOUR_AWS_CREDENTIAL_HERE"
 
-    /usr/bin/aptly api serve -config=/var/lib/jenkins/.aptly.conf -listen=":9003"
+    /usr/bin/aptly api serve -config=/var/lib/jenkins/.aptly.conf -listen=":80"
 end script
 
 ```
@@ -110,10 +110,10 @@ See an working example (aptly-cli.conf):
 # aptly-cli config file
 [general]
 basic_url=http://localhost
-port=:9003
-prefixes_mirrors=cloudera, erlang, mongodb2, mongodb_, nginx, puppetmaster, rabbitmq, redis, saltstack2014.7, saltstack2015.5, saltstack_, git
-repos_to_clean=unstable-repo, stable-repo
-package_prefixes=cluster-manager, puppet-config, ingest-api, camus-etl, aptly-cli
+port=:80
+prefixes_mirrors=tuenti
+repos_to_clean=unstable_repo
+package_prefixes=nginx
 save_last_pkg=10
 save_last_snap=3
 

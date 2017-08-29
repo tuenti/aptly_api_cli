@@ -90,6 +90,11 @@ def _get_parser_opts():
                       help='Upload file to local upload-directory',
                       metavar='UPLOAD_DIR FILE')
 
+    parser.add_option('--repo_add_local_package',
+                      nargs=2,
+                      help='Upload package and add it to repo',
+                      metavar='DISTRO PACKAGE_NAME [REPO] [DIRNAME]')
+
     parser.add_option('--repo_add_package_from_upload',
                       nargs=3,
                       help='Add package from upload folder to local repo',
@@ -238,13 +243,14 @@ def _execute_opts(opts, args, util):
     #
     # Basic API functionalities
     #
-    util.api.update_auth(opts.username)
 
     if opts.repo_list:
+        util.api.update_auth(opts.username)
         resp = util.api.repo_list()
         print json.dumps(resp, indent=2)
 
     if opts.repo_create:
+        util.api.update_auth(opts.username)
         if len(args) >= 3:
             Data.comment = args[0]
             Data.default_distribution = args[1]
@@ -255,6 +261,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.repo_show_packages:
+        util.api.update_auth(opts.username)
         resp = None
         if len(args) >= 3:
             resp = util.api.repo_show_packages(
@@ -264,10 +271,12 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.repo_show:
+        util.api.update_auth(opts.username)
         resp = util.api.repo_show(opts.repo_show)
         print json.dumps(resp, indent=2)
 
     if opts.repo_edit:
+        util.api.update_auth(opts.username)
         if len(args) >= 3:
             Data.comment = args[0]
             Data.default_distribution = args[1]
@@ -278,23 +287,37 @@ def _execute_opts(opts, args, util):
             print 'Wrong usage!'
 
     if opts.repo_delete:
+        util.api.update_auth(opts.username)
         resp = util.api.repo_delete(opts.repo_delete)
         print json.dumps(resp, indent=2)
 
     if opts.file_list_dirs:
+        util.api.update_auth(opts.username)
         resp = util.api.file_list_directories()
         print json.dumps(resp, indent=2)
 
     if opts.file_upload:
+        util.api.update_auth(opts.username)
         resp = util.api.file_upload(opts.file_upload[0], opts.file_upload[1])
         print json.dumps(resp, indent=2)
 
+    if opts.repo_add_local_package:
+        util.api.update_auth(opts.username)
+        o = opts.repo_add_local_package
+        if len(args) >= 1:
+          resp = util.repo_add_local_package(o[0], o[1], args[0], args[1])
+        else:
+          resp = util.repo_add_local_package(o[0], o[1])
+        print resp
+
     if opts.repo_add_package_from_upload:
+        util.api.update_auth(opts.username)
         o = opts.repo_add_package_from_upload
         resp = util.api.repo_add_package_from_upload(o[0], o[1], o[2])
         print json.dumps(resp, indent=2)
 
     if opts.repo_add_packages_by_key:
+        util.api.update_auth(opts.username)
         print 'repo_add_packages_by_key'
         o = opts.repo_add_packages_by_key
         key_list = o[1].split(', ')
@@ -302,6 +325,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.repo_delete_packages_by_key:
+        util.api.update_auth(opts.username)
         print 'repo_delete_packages_by_key'
         o = opts.repo_delete_packages_by_key
         key_list = o[1].split(', ')
@@ -309,16 +333,20 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.file_list:
+        util.api.update_auth(opts.username)
         resp = util.api.file_list()
 
     if opts.file_delete_dir:
+        util.api.update_auth(opts.username)
         resp = util.api.file_delete_directory(opts.file_delete_dir)
         print json.dumps(resp, indent=2)
 
     if opts.file_delete:
+        util.api.update_auth(opts.username)
         resp = util.api.file_delete(opts.file_delete[0], opts.file_delete[1])
 
     if opts.snapshot_create_from_local_repo:
+        util.api.update_auth(opts.username)
         o = opts.snapshot_create_from_local_repo
         resp = None
         if len(args) >= 1:
@@ -328,6 +356,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.snapshot_create_by_pack_refs:
+        util.api.update_auth(opts.username)
         o = opts.snapshot_create_by_pack_refs
         l = o[2].split(', ')
         resp = None
@@ -338,6 +367,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.snapshot_show_packages:
+        util.api.update_auth(opts.username)
         o = opts.snapshot_show_packages
         resp = None
         if len(args) >= 3:
@@ -347,21 +377,25 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.snapshot_update:
+        util.api.update_auth(opts.username)
         o = opts.snapshot_update
         if len(args) >= 1:
             resp = util.api.snapshot_update(o[0], o[1], args[0])
             print json.dumps(resp, indent=2)
 
     if opts.snapshot_list:
+        util.api.update_auth(opts.username)
         if len(args) >= 1:
             print json.dumps(util.api.snapshot_list(args[0]), indent=2)
         else:
             print json.dumps(util.api.snapshot_list(), indent=2)
 
     if opts.snapshot_diff:
+        util.api.update_auth(opts.username)
         print json.dumps(util.api.snapshot_diff(opts.snapshot_diff[0], opts.snapshot_diff[1]), indent=2)
 
     if opts.snapshot_delete:
+        util.api.update_auth(opts.username)
         resp = None
         if len(args) >= 1:
             print args[0]
@@ -371,10 +405,12 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.publish_list:
+        util.api.update_auth(opts.username)
         resp = util.api.publish_list()
         print json.dumps(resp, indent=2)
 
     if opts.publish:
+        util.api.update_auth(opts.username)
         o = opts.publish
         resp = None
         if len(args) >= 5:
@@ -385,6 +421,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.publish_switch:
+        util.api.update_auth(opts.username)
         o = opts.publish_switch
         res = None
         if len(args) >= 2:
@@ -394,6 +431,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(res, indent=2)
 
     if opts.publish_drop:
+        util.api.update_auth(opts.username)
         o = opts.publish_drop
         resp = None
         if len(args) >= 1:
@@ -403,6 +441,7 @@ def _execute_opts(opts, args, util):
         print json.dumps(resp, indent=2)
 
     if opts.package_show_by_key:
+        util.api.update_auth(opts.username)
         resp = util.api.package_show_by_key(opts.package_show_by_key)
         print json.dumps(resp, indent=2)
 
@@ -418,6 +457,7 @@ def _execute_opts(opts, args, util):
         util.create_init_file()
 
     if opts.get_last_snapshots:
+        util.api.update_auth(opts.username)
         o = opts.get_last_snapshots
         if len(args) >= 1:
             res = util.get_last_snapshots(o[0], o[1], args[0])
@@ -430,6 +470,7 @@ def _execute_opts(opts, args, util):
             print json.dumps(res, indent=2)
 
     if opts.clean_last_snapshots:
+        util.api.update_auth(opts.username)
         o = opts.clean_last_snapshots
         if len(args) >= 1:
             res = util.clean_last_snapshots(o[0], o[1], args[0])
@@ -439,22 +480,27 @@ def _execute_opts(opts, args, util):
         print json.dumps(res, indent=2)
 
     if opts.diff_both_last_snapshots_mirrors:
+        util.api.update_auth(opts.username)
         # package prefix, reponame
         util.diff_both_last_snapshots_mirrors()
 
     if opts.clean_mirrored_snapshots:
+        util.api.update_auth(opts.username)
         # package prefix, reponame
         util.clean_mirrored_snapshots()
 
     if opts.clean_repo_packages:
+        util.api.update_auth(opts.username)
         # package prefix, reponame
         util.clean_repo_packages()
 
     if opts.list_repos_and_packages:
+        util.api.update_auth(opts.username)
         # package prefix, reponame
         util.list_all_repos_and_packages()
 
     if opts.get_last_packages:
+        util.api.update_auth(opts.username)
         o = opts.get_last_packages
         if len(args) >= 1:
             res = util.get_last_packages(o[0], o[1], o[2], args[0])
@@ -467,6 +513,7 @@ def _execute_opts(opts, args, util):
             print json.dumps(res, indent=2)
 
     if opts.clean_last_packages:
+        util.api.update_auth(opts.username)
         o = opts.clean_last_packages
         if len(args) >= 1:
             res = util.clean_last_packages(o[0], o[1], o[2], args[0])
@@ -474,6 +521,7 @@ def _execute_opts(opts, args, util):
             res = util.clean_last_packages(o[0], o[1], o[2])
 
     if opts.publish_switch_3rdparty_production:
+        util.api.update_auth(opts.username)
         # package prefix, reponame
         util.publish_switch_3rdparty_production()
 

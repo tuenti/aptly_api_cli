@@ -6,7 +6,8 @@ Instance for utils and tools.
 """
 
 import re
-from os.path import expanduser, exists
+import time
+from os.path import expanduser, exists, basename
 from aptly_cli.api.api import AptlyApiRequests
 
 
@@ -44,10 +45,7 @@ class Util(object):
             try:
                 conf = open(name, 'a')
                 conf.write(
-                    '[general]\nbasic_url=http://localhost\nport=:9003\n \
-                    save_last_snap=3\nsave_last_pkg=10\nprefixes_mirrors=\n \
-                    package_prefixes=\nrepos_to_clean=\n[3rd_party]\nrepos=\n \
-                    staging_snap_pre_post=\n[auth]\user=\npassword=\n')
+                    '[general]\nbasic_url=https://aptly.tuenti.io\nport=:443\nsave_last_snap=3\nsave_last_pkg=10\nprefixes_mirrors=tuenti\npackage_prefixes=tuenti\nrepos_to_clean=tuenti\n\n[3rd_party]\nrepos=tuenti\nstaging_snap_pre_post=tuenti\n\n[auth]\nuser=\npassword=\n')
                 conf.close()
 
             except:
@@ -123,6 +121,54 @@ class Util(object):
         else:
             print prefix
             print "Nothing to delete...."
+
+    def repo_add_local_package(self, distro, package, repo=None, dir_name='tuenti'):
+        """ repo_add_local_package
+        Upload a local package and add it to a published repo
+        """
+        if repo is None:
+            local_cfg = self.api.get_config_from_file()
+            repo = local_cfg['repos'].split(', ')[0]
+        real_repo = "%s_%s" % (repo, distro)
+        package_name = basename(package)
+        upload = self.api.file_upload(dir_name, package)
+        if upload[0] == "%s/%s" % (dir_name, package_name):
+            add = self.api.repo_add_package_from_upload(real_repo, dir_name,
+                                                                package_name)
+            if package_name.split('.deb')[0] in add['Report']['Added'][0]:
+                print "Package uploaded, " + add['Report']['Added'][0]
+                snapshot_list = self.api.snapshot_list()
+                snapshot_name = real_repo + "_%d"
+                current = int(time.strftime("%Y%m%d") + '00')
+                while any(snp['Name'] == snapshot_name % (current) for
+                                        snp in snapshot_list):
+                    current += 1
+                real_snapshot_name = snapshot_name % (current)
+                snapshot = self.api.snapshot_create_from_local_repo(
+                                        real_snapshot_name,
+                                        real_repo,
+                                        "add package %s" % (package_name))
+                if any(snp['Name'] == real_snapshot_name for
+                                        snp in self.api.snapshot_list()):
+                    print "Snapshot %s created with new package" % (real_snapshot_name)
+                    switch = self.api.publish_switch(repo,
+                                        real_snapshot_name,
+                                        distro, "main", 0)
+                    if any(published['Sources'][0]['Name'] == real_snapshot_name for
+                                                published in self.api.publish_list()):
+                        return "Package uploaded, repo %s updated" % (repo)
+                    else:
+                        print "Error publishing repo %s " % (repo)
+                        return switch
+                else:
+                  print "Error publishing snapshot"
+                  print snapshot
+            else:
+              print "Error adding package to repo"
+              print add
+        else:
+          print "Error uploading package"
+          print upload
 
     def diff_both_last_snapshots_mirrors(self):
         """ diff_both_last_snapshots_mirrors
@@ -295,7 +341,6 @@ class Util(object):
         # Decide if it should be released to production
         if res == "EMPTY":
             print "New snapshot has no new packages. No need to release to production!"
-
         else:
             print "New packages were found...", res
 
