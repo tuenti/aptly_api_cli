@@ -4,8 +4,6 @@ aptly-cli (0.2.0) UNRELEASED; urgency=low
 
  -- agarciaf <agarciaf@tuenti.com>  Mon, 28 Aug 2017 17:51:03 +0200
 
-
-
 aptly-cli (0.1.9) UNRELEASED; urgency=low
 
   * Add basic auth
