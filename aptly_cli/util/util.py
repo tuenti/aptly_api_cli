@@ -122,23 +122,24 @@ class Util(object):
             print prefix
             print "Nothing to delete...."
 
-    def repo_add_local_package(self, distro, package, repo=None, dir_name='tuenti'):
+    def repo_add_local_package(self, repo, package, prefix='tuenti', dir_name='tuenti'):
         """ repo_add_local_package
         Upload a local package and add it to a published repo
+        At tuenti we name repository after the distro using tuenti as prefix
         """
         if repo is None:
             local_cfg = self.api.get_config_from_file()
             repo = local_cfg['repos'].split(', ')[0]
-        real_repo = "%s_%s" % (repo, distro)
         package_name = basename(package)
         upload = self.api.file_upload(dir_name, package)
         if upload[0] == "%s/%s" % (dir_name, package_name):
-            add = self.api.repo_add_package_from_upload(real_repo, dir_name,
+            print "Package %s uploaded" % (package_name)
+            add = self.api.repo_add_package_from_upload(repo, dir_name,
                                                                 package_name)
             if package_name.split('.deb')[0] in add['Report']['Added'][0]:
-                print "Package uploaded, " + add['Report']['Added'][0]
+                print "Package added to %s repository" % (repo)
                 snapshot_list = self.api.snapshot_list()
-                snapshot_name = real_repo + "_%d"
+                snapshot_name = repo + "-%d"
                 current = int(time.strftime("%Y%m%d") + '00')
                 while any(snp['Name'] == snapshot_name % (current) for
                                         snp in snapshot_list):
@@ -151,24 +152,24 @@ class Util(object):
                 if any(snp['Name'] == real_snapshot_name for
                                         snp in self.api.snapshot_list()):
                     print "Snapshot %s created with new package" % (real_snapshot_name)
-                    switch = self.api.publish_switch(repo,
+                    switch = self.api.publish_switch(prefix,
                                         real_snapshot_name,
-                                        distro, "main", 0)
+                                        repo, "main", 0)
                     if any(published['Sources'][0]['Name'] == real_snapshot_name for
                                                 published in self.api.publish_list()):
-                        return "Package uploaded, repo %s updated" % (repo)
+                        return "Tuenti repo %s updated" % (repo)
                     else:
                         print "Error publishing repo %s " % (repo)
                         return switch
                 else:
-                  print "Error publishing snapshot"
-                  print snapshot
+                    print "Error creating snapshot"
+                    return snapshot
             else:
-              print "Error adding package to repo"
-              print add
+                print "Error adding package to repo %s" % (repo)
+                return add
         else:
-          print "Error uploading package"
-          print upload
+            print "Error uploading package %s to aptly" % (package_name)
+            return upload
 
     def diff_both_last_snapshots_mirrors(self):
         """ diff_both_last_snapshots_mirrors
