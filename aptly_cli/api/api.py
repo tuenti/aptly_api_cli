@@ -90,11 +90,13 @@ class AptlyApiRequests(object):
         try:
             r = self.session.send(prepped, **settings)
             r.raise_for_status()
+        except exceptions.HTTPError as e:
+            if r.content is None:
+                print e
+                sys.exit(1)
         except exceptions.RequestException as e:
             print e
             sys.exit(1)
-        except exceptions.HTTPError as e:
-            print e
         resp_data = json.loads(r.content)
         return resp_data
 
@@ -463,6 +465,10 @@ class AptlyApiRequests(object):
         $ curl -X POST -F file=@aptly_0.9~dev+217+ge5d646c_i386.deb http://localhost:8080/api/files/aptly-0.9
         """
 
+        if not os.path.isfile(file_path):
+            print "File %s not found" % (file_path)
+            sys.exit(1)
+
         f = { 'files': open(file_path, 'rb') }
 
         req = Request('POST', self.cfg['route_file'] + dir_name, files=f)
@@ -580,8 +586,9 @@ class AptlyApiRequests(object):
         }
 
         req = Request('POST', url, data=json.dumps(data), headers=self.headers)
-        resp_data = json.loads(r.content)
-        return resp_data
+        prepped = self.session.prepare_request(req)
+        return self.make_request(prepped)
+
 
     def snapshot_create_from_package_refs(self, snapshot_name, source_snapshot_list, package_refs_list, descr=None):
         """
@@ -619,8 +626,8 @@ class AptlyApiRequests(object):
         }
 
         req = Request('POST', url, data=json.dumps(data), headers=self.heders)
-        resp_data = json.loads(r.content)
-        return resp_data
+        prepped = self.session.prepare_request(req)
+        return self.make_request(prepped)
 
 
     def snapshot_update(self, old_snapshot_name, new_snapshot_name, description=None):

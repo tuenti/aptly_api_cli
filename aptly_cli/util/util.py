@@ -127,46 +127,39 @@ class Util(object):
         Upload a local package and add it to a published repo
         At tuenti we name repository after the distro using tuenti as prefix
         """
-        if repo is None:
-            local_cfg = self.api.get_config_from_file()
-            repo = local_cfg['repos'].split(', ')[0]
         package_name = basename(package)
         upload = self.api.file_upload(dir_name, package)
         if upload[0] == "%s/%s" % (dir_name, package_name):
             print "Package %s uploaded" % (package_name)
             add = self.api.repo_add_package_from_upload(repo, dir_name,
                                                                 package_name)
-            if package_name.split('.deb')[0] in add['Report']['Added'][0]:
-                print "Package added to %s repository" % (repo)
-                snapshot_list = self.api.snapshot_list()
-                snapshot_name = repo + "-%d"
-                current = int(time.strftime("%Y%m%d") + '00')
-                while any(snp['Name'] == snapshot_name % (current) for
-                                        snp in snapshot_list):
-                    current += 1
-                real_snapshot_name = snapshot_name % (current)
-                snapshot = self.api.snapshot_create_from_local_repo(
-                                        real_snapshot_name,
-                                        real_repo,
-                                        "add package %s" % (package_name))
-                if any(snp['Name'] == real_snapshot_name for
-                                        snp in self.api.snapshot_list()):
-                    print "Snapshot %s created with new package" % (real_snapshot_name)
-                    switch = self.api.publish_switch(prefix,
-                                        real_snapshot_name,
-                                        repo, "main", 0)
-                    if any(published['Sources'][0]['Name'] == real_snapshot_name for
-                                                published in self.api.publish_list()):
-                        return "Tuenti repo %s updated" % (repo)
-                    else:
-                        print "Error publishing repo %s " % (repo)
-                        return switch
+            print "Package added to %s repository" % (repo)
+            snapshot_list = self.api.snapshot_list()
+            snapshot_name = repo + "-%d"
+            current = int(time.strftime("%Y%m%d") + '00')
+            while any(snp['Name'] == snapshot_name % (current) for
+                                    snp in snapshot_list):
+                current += 1
+            real_snapshot_name = snapshot_name % (current)
+            snapshot = self.api.snapshot_create_from_local_repo(
+                                    real_snapshot_name,
+                                    repo,
+                                    "add package %s" % (package_name))
+            if any(snp['Name'] == real_snapshot_name for
+                                    snp in self.api.snapshot_list()):
+                print "Snapshot %s created with new package" % (real_snapshot_name)
+                switch = self.api.publish_switch(prefix,
+                                    real_snapshot_name,
+                                    repo, "main", 0)
+                if any(published['Sources'][0]['Name'] == real_snapshot_name for
+                                            published in self.api.publish_list()):
+                    return "Tuenti repo %s updated" % (repo)
                 else:
-                    print "Error creating snapshot"
-                    return snapshot
+                    print "Error publishing repo %s " % (repo)
+                    return switch
             else:
-                print "Error adding package to repo %s" % (repo)
-                return add
+                print "Error creating snapshot"
+                return snapshot
         else:
             print "Error uploading package %s to aptly" % (package_name)
             return upload
